@@ -1,0 +1,5 @@
+[db-config]
+host = redis-10591.c293.eu-central-1-1.ec2.cloud.redislabs.com
+port = 10591
+port = default
+port = XvWTaxm1FobeBV2jc0nZNfxPcJAwZdQP
