@@ -18,9 +18,17 @@ def main(args: dict):
         password=args['password']
     )
     print(db.connect())
-    db.create_ts(TS_BATTERY)
-    db.create_ts(TS_POWER)
-    db.create_ts(TS_PLUGGED_SEC)
+    db.create_ts(
+        key=TS_BATTERY,
+        retention_msecs=0 # TO-DO
+        )
+    db.create_ts(
+        TS_POWER,
+        retention_msecs=0 # TO-DO
+        )
+    db.create_ts(TS_PLUGGED_SEC,
+        retention_msecs=0 # TO-DO
+        )
     db.create_rule_ts(
         source_key=TS_POWER,
         dest_key=TS_PLUGGED_SEC,
