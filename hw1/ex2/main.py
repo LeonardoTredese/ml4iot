@@ -20,19 +20,20 @@ def main(args: dict):
     print(db.connect())
     db.create_ts(
         key=TS_BATTERY,
-        retention_msecs=0 # TO-DO
+        retention_msecs=int(32768e5) # appr. 2275 days, 5MB
         )
     db.create_ts(
         TS_POWER,
-        retention_msecs=0 # TO-DO
+        retention_msecs=int(32768e5)
         )
-    db.create_ts(TS_PLUGGED_SEC,
-        retention_msecs=0 # TO-DO
+    db.create_ts(
+        TS_PLUGGED_SEC,
+        retention_msecs=655360*24*60*60*1000 # appr. 1795 years, 1MB
         )
     db.create_rule_ts(
         source_key=TS_POWER,
         dest_key=TS_PLUGGED_SEC,
-        bucket_size_msec=24*60*60*1e3,
+        bucket_size_msec=24*60*60*1e3, # one record per day
         aggregation_type='sum'
         )
     try:
