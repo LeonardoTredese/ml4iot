@@ -12,10 +12,10 @@ def main(args: dict):
     TS_POWER = f'{MAC_ADDRESS}:power'
     TS_PLUGGED_SEC = f'{MAC_ADDRESS}:plugged_seconds'
     db = RedisDB(
-        host=args['host'], 
-        port=args['port'],
-        user=args['user'],
-        password=args['password']
+        host=args.host, 
+        port=args.port,
+        user=args.user,
+        password=args.password
     )
     print(db.connect())
     db.create_ts(
