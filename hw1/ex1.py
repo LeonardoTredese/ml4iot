@@ -25,17 +25,28 @@ def get_spectrogram(indata, samplerate, frame_length_in_s, frame_step_in_s):
     spectrogram = tf.abs(stft)
     return spectrogram
 
-def is_silence(indata, samplerate, frame_length_in_s, dbFSthres, duration_thres):
-    spectrogram = get_spectrogram(indata, samplerate, frame_length_in_s, frame_length_in_s)
-    dbFS = 20 * tf.math.log(spectrogram + 1e-6)
+def is_silence(indata, samplerate, frame_length_in_s, dbFSthresh, duration_time):
+    spectrogram = get_spectrogram(
+        indata,
+        samplerate,
+        frame_length_in_s,
+        frame_length_in_s
+    )
+    dbFS = 20 * tf.math.log(spectrogram + 1.e-6)
     energy = tf.math.reduce_mean(dbFS, axis=1)
-    silent_frames = tf.reduce_sum(tf.cast(energy < dbFSthres, tf.int8))
-    return duration_thres < float(silent_frames) * frame_length_in_s
+    non_silence = energy > dbFSthresh
+    non_silence_frames = tf.math.reduce_sum(tf.cast(non_silence, tf.float32))
+    non_silence_duration = (non_silence_frames + 1) * frame_length_in_s
+
+    if non_silence_duration > duration_time:
+        return 0
+    else:
+        return 1
 
 def get_callback(samplerate):
     def store_in_file(indata, frames, callback_time, status):
         filename =f'{str(time())}.wav'
-        if not is_silence(indata, samplerate, .1, -121, .85):
+        if not is_silence(indata, samplerate, .1, -121, .2):
             wf.write(filename, samplerate, indata)
     return store_in_file
 
