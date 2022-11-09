@@ -5,7 +5,6 @@ import argparse
 import os
 from time import time
 
-
 def get_audio_from_numpy(indata):
  indata = tf.convert_to_tensor(indata, dtype=tf.float32)
  indata = (indata + 32768) / (32767 + 32768)
@@ -46,7 +45,7 @@ def is_silence(indata, samplerate, frame_length_in_s, dbFSthresh, duration_time)
 def get_callback(samplerate):
     def store_in_file(indata, frames, callback_time, status):
         filename =f'{str(time())}.wav'
-        if not is_silence(indata, samplerate, .1, -121, .2):
+        if not is_silence(indata, samplerate, 8e-3, -120, 8e-3):
             wf.write(filename, samplerate, indata)
     return store_in_file
 
