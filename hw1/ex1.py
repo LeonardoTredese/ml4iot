@@ -14,7 +14,7 @@ def get_audio_from_numpy(indata):
 def get_spectrogram(indata, samplerate, frame_length_in_s, frame_step_in_s):
     audio = get_audio_from_numpy(indata)
     frame_length = int(frame_length_in_s * samplerate)
-    frame_step = int(frame_length_in_s * samplerate)
+    frame_step = int(frame_step_in_s * samplerate)
     stft = tf.signal.stft(
         audio,
         frame_length = frame_length,
