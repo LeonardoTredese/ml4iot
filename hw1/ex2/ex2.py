@@ -114,7 +114,7 @@ def main(args: dict) -> None:
     print(db.connect())
     db.create_ts(
         key=TS_BATTERY,
-        retention_msecs=int(32768e5) # appr. 2275 days, 5MB
+        retention_msecs=int(2621440e4) # appr. 30 days, 5MB
         )
     db.create_ts(
         TS_POWER,
@@ -122,7 +122,7 @@ def main(args: dict) -> None:
         )
     db.create_ts(
         TS_PLUGGED_SEC,
-        retention_msecs=655360*24*60*60*1000 # appr. 1795 years, 1MB
+        retention_msecs=524288*24*60*60*1000 # appr. 1436 years, 1MB
         )
     db.create_rule_ts(
         source_key=TS_POWER,
