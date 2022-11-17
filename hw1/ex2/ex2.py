@@ -118,7 +118,7 @@ def main(args: dict) -> None:
         )
     db.create_ts(
         TS_POWER,
-        retention_msecs=int(32768e5)
+        retention_msecs=int(2621440e4)
         )
     db.create_ts(
         TS_PLUGGED_SEC,
