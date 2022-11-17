@@ -114,11 +114,11 @@ def main(args: dict) -> None:
     print(db.connect())
     db.create_ts(
         key=TS_BATTERY,
-        retention_msecs=int(2621440e4) # appr. 30 days, 5MB
+        retention_msecs=int(262144e4) # appr. 30 days, 5MB
         )
     db.create_ts(
         TS_POWER,
-        retention_msecs=int(2621440e4)
+        retention_msecs=int(262144e4)
         )
     db.create_ts(
         TS_PLUGGED_SEC,
