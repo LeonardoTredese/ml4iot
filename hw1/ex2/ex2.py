@@ -111,7 +111,8 @@ def main(args: dict) -> None:
         user=args.user,
         password=args.password
         )
-    print(db.connect())
+    db.connect()
+    print('Is Redis connected? ', db.is_connected())
     db.create_ts(
         key=TS_BATTERY,
         retention_msecs=int(262144e4) # appr. 30 days, 5MB
@@ -122,7 +123,7 @@ def main(args: dict) -> None:
         )
     db.create_ts(
         TS_PLUGGED_SEC,
-        retention_msecs=524288*24*60*60*1000 # appr. 1436 years, 1MB
+        retention_msecs=int(452984832e5) # appr. 1436 years, 1MB
         )
     db.create_rule_ts(
         source_key=TS_POWER,
