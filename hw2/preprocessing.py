@@ -9,7 +9,6 @@ class Preprocessor:
             train_files_ds,
             test_files_ds,
             val_files_ds,
-            downsampling_rate: int,
             frame_length_in_s: float,
             frame_step_in_s: float,
             num_mel_bins: int,
@@ -20,15 +19,13 @@ class Preprocessor:
         self.train_files_ds = train_files_ds
         self.test_files_ds = test_files_ds
         self.val_files_ds = val_files_ds
-        self.downsampling_rate = downsampling_rate
+        self.downsampling_rate = 16000
         self.frame_length_in_s = frame_length_in_s
         self.frame_step_in_s = frame_step_in_s
         self.num_mel_bins = num_mel_bins
         self.lower_frequency = lower_frequency
         self.upper_frequency = upper_frequency
         self.num_coefficients = num_coefficients
-        self.spectrogram_shape = None
-        self.set_spectrogram_shape()
         self.train_spectrogram_ds = self.train_files_ds.map(self.get_spectrogram)
         self.test_spectrogram_ds = self.test_files_ds.map(self.get_spectrogram)
         self.val_spectrogram_ds = self.val_files_ds.map(self.get_spectrogram)
@@ -38,11 +35,6 @@ class Preprocessor:
         self.train_mfccs_ds = self.train_files_ds.map(self.get_mfccs)
         self.test_mfccs_ds = self.test_files_ds.map(self.get_mfccs)
         self.val_mfccs_ds = self.val_files_ds.map(self.get_mfccs)
-        
-    def set_spectrogram_shape(self):
-        tmp_ds = self.test_files_ds.map(self.get_spectrogram).cache()
-        for spectrogram, _ in tmp_ds.take(1):
-            self.spectrogram_shape = spectrogram.shape
 
     def get_audio_and_label(self, filename):
         audio_binary = tf.io.read_file(filename)

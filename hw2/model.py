@@ -6,7 +6,6 @@ from preprocessing import *
 
 
 MFCCS_ARGS = {
-    'downsampling_rate': 16000,
     'frame_length_in_s': 0.04, # 40 ms
     'frame_step_in_s': 0.02,   # overlap of 50%
     'num_mel_bins': 40,
