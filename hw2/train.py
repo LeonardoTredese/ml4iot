@@ -29,12 +29,13 @@ def compute_size(
         model_name: int
         ) -> tuple[int, int]:
     model_path = os.path.join(models_folder, model_name)
-    model_size = os.path.getsize(model_path)
+    model_size = 0
     model_files = get_all_file_paths(model_path)
     zip_path = f'{model_path}.zip'
     with ZipFile(zip_path, 'w') as f:
         for file_path in model_files:
             f.write(file_path)
+            model_size += os.path.getsize(file_path)
     zip_size = os.path.getsize(zip_path)
     return model_size, zip_size
 
@@ -212,7 +213,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--epochs',
         type=int,
-        default=1,
+        default=20,
         help='The number of epochs.'
     )
     parser.add_argument(
