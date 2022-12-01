@@ -21,7 +21,7 @@ class Dataset:
         self.test_files_ds = test_files_ds
         self.val_files_ds = val_files_ds
         self.DOWNSAMPLING_RATE = 16000
-        self.LABELS = ('down', 'up',)
+        self.LABELS = ('go', 'stop',)
         self.batch_size = batch_size
         self.sample_shape = None
         self.frame_length_in_s = frame_length_in_s

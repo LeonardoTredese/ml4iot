@@ -135,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--preprocess',
         type=str,
-        default='spect',
+        default='mfccs',
         help='Type of preprocess, str in \
             ["spect", "log_mel_spect", "mfccs"]'
     )
