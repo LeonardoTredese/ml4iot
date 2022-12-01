@@ -7,6 +7,7 @@ import numpy as np
 from time import time
 import pandas as pd
 from zipfile import ZipFile
+import shutil
 seed = 42
 os.environ['PYTHONHASHSEED'] = str(seed)
 os.environ['TF_DETERMINISTIC_OPS'] = '1'
@@ -119,20 +120,17 @@ def main(args):
     )
     model = get_model(dataset)
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=False)
-    initial_learning_rate = args.initial_learning_rate
-    end_learning_rate = args.end_learning_rate
-    epochs = args.epochs
     linear_decay = tf.keras.optimizers.schedules.PolynomialDecay(
-        initial_learning_rate=initial_learning_rate,
-        end_learning_rate=end_learning_rate,
-        decay_steps=len(dataset.train_ds) * epochs,
+        initial_learning_rate=args.initial_learning_rate,
+        end_learning_rate=args.end_learning_rate,
+        decay_steps=len(dataset.train_ds) * args.epochs,
     )
     optimizer = tf.optimizers.Adam(learning_rate=linear_decay)
     metrics = [tf.metrics.SparseCategoricalAccuracy()]
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
     history = model.fit(
         dataset.train_ds,
-        epochs=epochs,
+        epochs=args.epochs,
         validation_data=dataset.val_ds
         )
     test_loss, test_accuracy = model.evaluate(dataset.test_ds)
@@ -140,17 +138,10 @@ def main(args):
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
     val_loss = history.history['val_loss'][-1]
     val_accuracy = history.history['val_sparse_categorical_accuracy'][-1]
-    """print(f'Training Loss: {training_loss:.4f}')
-    print(f'Training Accuracy: {training_accuracy*100.:.2f}%')
-    print()
-    print(f'Validation Loss: {val_loss:.4f}')
-    print(f'Validation Accuracy: {val_accuracy*100.:.2f}%')
-    print()
-    print(f'Test Loss: {test_loss:.4f}')
-    print(f'Test Accuracy: {test_accuracy*100.:.2f}%')"""
     timestamp = int(time())
     model_name = str(timestamp)
-    model.save(os.path.join(args.models_folder, model_name))
+    model_path = os.path.join(args.models_folder, model_name)
+    model.save(model_path)
     model_size, zip_size = compute_size(
         models_folder=args.models_folder,
         model_name=str(timestamp)
@@ -166,7 +157,7 @@ def main(args):
     model_info['test_accuracy'] = test_accuracy
     df = pd.DataFrame(model_info, index=[0])
     output_path = os.path.join(
-        args.models_folder,
+        args.results_folder,
         f'{model_name}.csv'
         )
     df.to_csv(
@@ -175,7 +166,7 @@ def main(args):
         header=not os.path.exists(output_path),
         index=False
         )
-    
+    shutil.rmtree(args.models_folder)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -257,5 +248,11 @@ if __name__ == '__main__':
         type=str,
         default='models',
         help='Folder for saving the models and results.'
+    )
+    parser.add_argument(
+        '--results_folder',
+        type=str,
+        default='results',
+        help='Folder for saving csv results.'
     )
     main(parser.parse_args())

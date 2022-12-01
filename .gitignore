@@ -2,6 +2,7 @@
 hw1/ex2/settings.txt
 msc-data/*
 hw2/models/*
+hw2/results/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
