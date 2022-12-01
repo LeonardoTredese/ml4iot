@@ -4,22 +4,6 @@ import argparse
 import os
 
 
-PREPROCESS_ARGS = {
-    'batch_size': 10,
-    'frame_length_in_s': 0.04, # 40 ms
-    'frame_step_in_s': 0.02,   # overlap of 50%
-    'num_mel_bins': 40,
-    'lower_frequency': 20,
-    'upper_frequency': 4000,
-    'num_coefficients': 40
-}
-
-TRAINING_ARGS = {
-    'initial_learning_rate': 0.01,
-    'end_learning_rate': 1e-5,
-    'epochs': 10
-}
-
 def get_model(dataset: Dataset):
     model = tf.keras.Sequential([
         tf.keras.layers.Input(
@@ -88,14 +72,20 @@ def main(args):
         train_files_ds=train_files_ds,
         test_files_ds=test_files_ds,
         val_files_ds=val_files_ds,
-        preprocess='mfccs',
-        **PREPROCESS_ARGS
+        preprocess=args.preprocess,
+        batch_size=args.batch_size,
+        frame_length_in_s=args.frame_length_in_s,
+        frame_step_in_s=args.frame_step_in_s,
+        num_mel_bins=args.num_mel_bins,
+        lower_frequency=args.lower_frequency,
+        upper_frequency=args.upper_frequency,
+        num_coefficients=args.num_coefficients
     )
     model = get_model(dataset)
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=False)
-    initial_learning_rate = TRAINING_ARGS['initial_learning_rate']
-    end_learning_rate = TRAINING_ARGS['end_learning_rate']
-    epochs = TRAINING_ARGS['epochs']
+    initial_learning_rate = args.initial_learning_rate
+    end_learning_rate = args.end_learning_rate
+    epochs = args.epochs
     linear_decay = tf.keras.optimizers.schedules.PolynomialDecay(
         initial_learning_rate=initial_learning_rate,
         end_learning_rate=end_learning_rate,
@@ -138,5 +128,65 @@ if __name__ == '__main__':
         default='mfccs',
         help='Type of preprocess, str in \
             ["spect", "log_mel_spect", "mfccs"]'
+    )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=20,
+        help='The size for the batches.'
+    )
+    parser.add_argument(
+        '--initial_learning_rate',
+        type=float,
+        default=0.01,
+        help='The initial learning rate value.'
+    )
+    parser.add_argument(
+        '--end_learning_rate',
+        type=float,
+        default=1e-5,
+        help='The final learning rate value.'
+    )
+    parser.add_argument(
+        '--epochs',
+        type=int,
+        default=20,
+        help='The number of epochs.'
+    )
+    parser.add_argument(
+        '--frame_length_in_s',
+        type=float,
+        default=0.04,
+        help='The frame length for STFT.'
+    )
+    parser.add_argument(
+        '--frame_step_in_s',
+        type=float,
+        default=0.02,
+        help='The step size for STFT.'
+    )
+    parser.add_argument(
+        '--num_mel_bins',
+        type=int,
+        default=40,
+        help='The number of bins for the mel spectrogram.'
+    )
+    parser.add_argument(
+        '--lower_frequency',
+        type=int,
+        default=20,
+        help='The lower frequency for the mel spectrogram.'
+    )
+    parser.add_argument(
+        '--upper_frequency',
+        type=int,
+        default=4000,
+        help='The upper frequency for the mel spectrogram.'
+    )
+    parser.add_argument(
+        '--num_coefficients',
+        type=int,
+        default=40,
+        help='The number of coefficients in mfccs.'
     )
     main(parser.parse_args())
