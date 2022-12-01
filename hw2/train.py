@@ -4,12 +4,28 @@ import argparse
 import os
 import random
 import numpy as np
+from time import time
+import pandas as pd
+from zipfile import ZipFile
 seed = 42
 os.environ['PYTHONHASHSEED'] = str(seed)
 os.environ['TF_DETERMINISTIC_OPS'] = '1'
 random.seed(seed)
 tf.random.set_seed(seed)
 np.random.seed(seed)
+
+
+def compute_size(
+        models_folder: str,
+        model_name: int
+        ) -> tuple[int, int]:
+    model_path = os.path.join(models_folder, model_name)
+    model_size = os.path.getsize(model_path)
+    zip_path = f'{model_path}.zip'
+    with ZipFile(zip_path, 'w') as f:
+        f.write(model_path)
+    zip_size = os.path.getsize(zip_path)
+    return model_size, zip_size
 
 
 def get_model(dataset: Dataset):
@@ -112,15 +128,42 @@ def main(args):
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
     val_loss = history.history['val_loss'][-1]
     val_accuracy = history.history['val_sparse_categorical_accuracy'][-1]
-    print(f'Training Loss: {training_loss:.4f}')
+    """print(f'Training Loss: {training_loss:.4f}')
     print(f'Training Accuracy: {training_accuracy*100.:.2f}%')
     print()
     print(f'Validation Loss: {val_loss:.4f}')
     print(f'Validation Accuracy: {val_accuracy*100.:.2f}%')
     print()
     print(f'Test Loss: {test_loss:.4f}')
-    print(f'Test Accuracy: {test_accuracy*100.:.2f}%')
-
+    print(f'Test Accuracy: {test_accuracy*100.:.2f}%')"""
+    timestamp = int(time())
+    model_name = str(timestamp)
+    model.save(os.path.join(args.models_folder, model_name))
+    model_size, zip_size = compute_size(
+        models_folder=args.models_folder,
+        model_name=str(timestamp)
+        )
+    model_info = vars(args)
+    model_info['model_size'] = model_size
+    model_info['zip_size'] = zip_size
+    model_info['training_loss'] = training_loss
+    model_info['training_accuracy'] = training_accuracy
+    model_info['val_loss'] = val_loss
+    model_info['val_accuracy'] = val_accuracy
+    model_info['test_loss'] = test_loss
+    model_info['test_accuracy'] = test_accuracy
+    df = pd.DataFrame(model_info, index=[0])
+    output_path = os.path.join(
+        args.models_folder,
+        f'{model_name}.csv'
+        )
+    df.to_csv(
+        output_path,
+        mode='a',
+        header=not os.path.exists(output_path),
+        index=False
+        )
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -158,7 +201,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--epochs',
         type=int,
-        default=20,
+        default=1,
         help='The number of epochs.'
     )
     parser.add_argument(
@@ -196,5 +239,11 @@ if __name__ == '__main__':
         type=int,
         default=40,
         help='The number of coefficients in mfccs.'
+    )
+    parser.add_argument(
+        '--models_folder',
+        type=str,
+        default='models',
+        help='Folder for saving the models and results.'
     )
     main(parser.parse_args())
