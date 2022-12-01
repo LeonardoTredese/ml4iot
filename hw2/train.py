@@ -15,15 +15,26 @@ tf.random.set_seed(seed)
 np.random.seed(seed)
 
 
+def get_all_file_paths(directory: str) -> list:
+    file_paths = []
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            file_paths.append(filepath)
+    return file_paths
+
+
 def compute_size(
         models_folder: str,
         model_name: int
         ) -> tuple[int, int]:
     model_path = os.path.join(models_folder, model_name)
     model_size = os.path.getsize(model_path)
+    model_files = get_all_file_paths(model_path)
     zip_path = f'{model_path}.zip'
     with ZipFile(zip_path, 'w') as f:
-        f.write(model_path)
+        for file_path in model_files:
+            f.write(file_path)
     zip_size = os.path.getsize(zip_path)
     return model_size, zip_size
 
