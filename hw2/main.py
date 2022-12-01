@@ -57,7 +57,7 @@ def get_model(dataset: Dataset):
         tf.keras.layers.Conv2D(
             filters=256,
             kernel_size=[1, 1],
-            strides=[1, 1],   
+            strides=[1, 1],
             use_bias=False
             ),
         tf.keras.layers.BatchNormalization(),
@@ -82,7 +82,7 @@ def main(args):
         )
     val_files_ds = tf.data.Dataset.list_files(
         (os.path.join(ds_path,'msc-val','stop*'),
-        os.path.join(ds_path,'msc-val','stop*'))
+        os.path.join(ds_path,'msc-val','go*'))
         )
     dataset = Dataset(
         train_files_ds=train_files_ds,
