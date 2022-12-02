@@ -1,4 +1,5 @@
 import tensorflow as tf
+from model import get_model
 from dataset import Dataset
 import argparse
 import os
@@ -8,6 +9,7 @@ from time import time
 import pandas as pd
 from zipfile import ZipFile
 import shutil
+
 seed = 42
 os.environ['PYTHONHASHSEED'] = str(seed)
 os.environ['TF_DETERMINISTIC_OPS'] = '1'
@@ -15,6 +17,9 @@ random.seed(seed)
 tf.random.set_seed(seed)
 np.random.seed(seed)
 
+PRUNING_PARAMS = {
+
+}
 
 def get_all_file_paths(directory: str) -> list:
     file_paths = []
@@ -40,56 +45,6 @@ def compute_size(
     zip_size = os.path.getsize(zip_path)
     return model_size, zip_size
 
-
-def get_model(dataset: Dataset):
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(
-            shape=dataset.get_sample_shape()[1:]
-            ),
-        tf.keras.layers.Conv2D(
-            filters=256,
-            kernel_size=[3, 3],
-            strides=[2, 2],
-            use_bias=False,
-            padding='valid'
-            ),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.ReLU(),
-        tf.keras.layers.DepthwiseConv2D(
-            kernel_size=[3, 3],
-            strides=[1, 1], 
-            use_bias=False,
-            padding='same'
-            ),
-        tf.keras.layers.Conv2D(
-            filters=256,
-            kernel_size=[1, 1],
-            strides=[1, 1],   
-            use_bias=False
-            ),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.ReLU(),
-        tf.keras.layers.DepthwiseConv2D(
-            kernel_size=[3, 3],
-            strides=[1, 1],
-            use_bias=False,
-            padding='same'
-            ),
-        tf.keras.layers.Conv2D(
-            filters=256,
-            kernel_size=[1, 1],
-            strides=[1, 1],
-            use_bias=False
-            ),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.ReLU(),
-        tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(
-            units=len(dataset.LABELS)
-            ),
-        tf.keras.layers.Softmax()
-        ])
-    return model
 
 def main(args):
     ds_path = args.dataset
@@ -118,7 +73,14 @@ def main(args):
         upper_frequency=args.upper_frequency,
         num_coefficients=args.num_coefficients
     )
-    model = get_model(dataset)
+    model, callbacks = get_model(
+        dataset=dataset,
+        prune=args.prune,
+        initial_sparsity=args.initial_sparsity,
+        final_sparsity=args.final_sparsity,
+        begin_step=int(len(dataset.train_ds)*args.epochs*0.2),
+        end_step=int(len(dataset.train_ds)*args.epochs)
+        )
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=False)
     linear_decay = tf.keras.optimizers.schedules.PolynomialDecay(
         initial_learning_rate=args.initial_learning_rate,
@@ -131,7 +93,8 @@ def main(args):
     history = model.fit(
         dataset.train_ds,
         epochs=args.epochs,
-        validation_data=dataset.val_ds
+        validation_data=dataset.val_ds,
+        callbacks=callbacks
         )
     test_loss, test_accuracy = model.evaluate(dataset.test_ds)
     training_loss = history.history['loss'][-1]
@@ -180,8 +143,7 @@ if __name__ == '__main__':
         '--preprocess',
         type=str,
         default='mfccs',
-        help='Type of preprocess, str in \
-            ["spect", "log_mel_spect", "mfccs"]'
+        help='Type of preprocess, str in ["spect", "log_mel_spect", "mfccs"]'
     )
     parser.add_argument(
         '--batch_size',
@@ -254,6 +216,23 @@ if __name__ == '__main__':
         type=str,
         default='results',
         help='Folder for saving csv results.'
+    )
+    parser.add_argument(
+        '--initial_sparsity',
+        type=float,
+        default=0.2,
+        help='Parameter for weights pruning.'
+    )
+    parser.add_argument(
+        '--final_sparsity',
+        type=float,
+        default=0.7,
+        help='Parameter for weights pruning.'
+    )
+    parser.add_argument(
+        '--prune',
+        action='store_true',
+        help='Use this flag to perform weights pruning'
     )
     args = parser.parse_args()
     args.models_folder = os.path.join(args.dataset, args.models_folder)
