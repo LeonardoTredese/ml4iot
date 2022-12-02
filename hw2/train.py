@@ -17,10 +17,6 @@ random.seed(seed)
 tf.random.set_seed(seed)
 np.random.seed(seed)
 
-PRUNING_PARAMS = {
-
-}
-
 def get_all_file_paths(directory: str) -> list:
     file_paths = []
     for root, _, files in os.walk(directory):
