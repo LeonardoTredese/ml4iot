@@ -5,8 +5,16 @@ import zipfile
 
 
 def save(model, models_folder: str) -> str:
-    timestamp = int(time())
-    model_name = str(timestamp)
+    """
+    Save the model in the models_folder, using the
+    timestamp as model name.
+    IN:
+        - model: a tensorflow model.
+        - models_folder: the absolute path in which to save the model.
+    OUT:
+        - the name assigned to the model (i.e., the timestamp).
+    """
+    model_name = str(int(time()))
     model_path = os.path.join(models_folder, model_name)
     model.save(model_path)
     return model_name
@@ -16,6 +24,16 @@ def convert_to_lite(
         models_folder: str,
         model_name: str,
         tflite_models_folder: str) -> tuple[float, float]:
+    """
+    Generate .tflite and .zip from a saved model
+    (with the save function in this module).
+    IN:
+        - models_folder: the folder in which the models are saved.
+        - model_name: the name of the model to be converted.
+    OUT:
+        - the size of the .tflite file
+        - the size of the .zip file
+    """
     model_path = os.path.join(models_folder, model_name)
     converter = tf.lite.TFLiteConverter.from_saved_model(model_path)
     tflite_model = converter.convert()

@@ -17,6 +17,29 @@ class Dataset:
             upper_frequency: int,
             num_coefficients: int
             ):
+        """
+        This class manages the dataset and its preprocessing.
+        IN:
+            - train_files_ds: a string tensorflow Dataset, in which
+                              each object is the filename of a sample
+                              in the training set.
+            - test_file_ds: same as the previous but for the test set.
+            - val_files_ds: same as the previous but for validation set.
+            - preprocess: a string in ['mfccs', 'log_mel_spect', 'spect'],
+                          i.e., the type of preprocessing to apply.
+            - batch_size: the batch size
+            - frame_length_in_s: parameter to compute the spectrogram.
+            - frame_step_in_s: parameter to compute the spectrogram.
+            - num_mel_bins: parameter to compute log mel spectrogram.
+            - lower_frequency: parameter to compute log mel spectrogram.
+            - upper_frequency: parameter to compute log mel spectrogram.
+            - num_coefficients: parameter to compute mfccs.
+        OUT:
+            - train_ds: training dataset with the desired preprocessing,
+                           ready to be iterated.
+            - test_ds: same as previous but for the test dataset.
+            - val_ds: same as previous but for the validation dataset.
+        """
         self.train_files_ds = train_files_ds
         self.test_files_ds = test_files_ds
         self.val_files_ds = val_files_ds

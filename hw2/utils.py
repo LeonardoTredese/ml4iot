@@ -7,6 +7,11 @@ import tensorflow as tf
 
 
 def create_folders(args) -> None:
+    """
+    Creates all the folders passed
+    as parameters for performing the
+    experiments.
+    """
     folders = (
         args.models_folder,
         args.tflite_models_folder,
@@ -18,6 +23,10 @@ def create_folders(args) -> None:
 
 
 def flush_folders(args) -> None:
+    """
+    Before starting the experiment,
+    all the past results are deleted.
+    """
     if args.clean:
         folders = (
             args.models_folder,
@@ -30,6 +39,9 @@ def flush_folders(args) -> None:
 
 
 def set_random_state(seed: int) -> None:
+    """
+    Set the random state for the experiment.
+    """
     os.environ['PYTHONHASHSEED'] = str(seed)
     os.environ['TF_DETERMINISTIC_OPS'] = '1'
     random.seed(seed)
@@ -38,6 +50,12 @@ def set_random_state(seed: int) -> None:
 
 
 def compute_latency(model, dataset) -> float:
+    """
+    Compute the latency of a given model on
+    a given dataset. This function compute
+    the median over the latency values of
+    each prediction.
+    """
     values = np.empty(
         shape=(len(dataset),),
         dtype=float

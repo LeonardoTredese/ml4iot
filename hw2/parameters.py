@@ -2,6 +2,9 @@ from argparse import ArgumentParser
 
 
 def IO(parser: ArgumentParser) -> None:
+    """
+    Add to the parser generals and input/output parameters.
+    """
     parser.add_argument(
         '--dataset',
         type=str,
@@ -36,6 +39,9 @@ def IO(parser: ArgumentParser) -> None:
 
 
 def preprocess(parser: ArgumentParser) -> None:
+    """
+    Add to the parser preprocessing parameters.
+    """
     parser.add_argument(
         '--preprocess',
         type=str,
@@ -81,6 +87,9 @@ def preprocess(parser: ArgumentParser) -> None:
 
 
 def pruning(parser: ArgumentParser) -> None:
+    """
+    Add to the parser pruning parameters.
+    """
     parser.add_argument(
         '--prune',
         action='store_true',
@@ -101,6 +110,9 @@ def pruning(parser: ArgumentParser) -> None:
 
 
 def training(parser: ArgumentParser) -> None:
+    """
+    Add to the parser training parameters.
+    """
     parser.add_argument(
         '--batch_size',
         type=int,
