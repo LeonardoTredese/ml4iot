@@ -60,12 +60,11 @@ def compute_latency(model, dataset) -> float:
         shape=(len(dataset),),
         dtype=float
         )
-    i = 0
-    for sample, _ in dataset:
+    for i in range(len(dataset)):
         start = time()
+        sample = dataset.take(1)
         model.predict(sample)
         values[i] = time() - start
-        i += 1
     return np.median(values)*1e3
 
 
