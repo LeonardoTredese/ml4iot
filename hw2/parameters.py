@@ -5,25 +5,21 @@ def IO(parser: ArgumentParser) -> None:
     parser.add_argument(
         '--dataset',
         type=str,
-        default='/home/mveronesi/ml4iot/msc-data',
         help='Absolute path for msc dataset'
     )
     parser.add_argument(
         '--models_folder',
         type=str,
-        default='/home/mveronesi/ml4iot/hw2/models',
         help='Absolute path of the folder for saving the models.'
     )
     parser.add_argument(
         '--tflite_models_folder',
         type=str,
-        default='/home/mveronesi/ml4iot/hw2/tflite_models',
         help='Absolute path of the folder for saving tflite models'
     )
     parser.add_argument(
         '--results_folder',
         type=str,
-        default='/home/mveronesi/ml4iot/hw2/results',
         help='Absolute path of the folder for saving csv results.'
     )
     parser.add_argument(

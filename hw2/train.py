@@ -3,42 +3,10 @@ from model import get_model
 from dataset import Dataset
 from argparse import ArgumentParser
 import os
-import random
-import numpy as np
 import save
 import parameters
 import pandas as pd
-import shutil
-
-
-def create_folders(args) -> None:
-    folders = (
-        args.models_folder,
-        args.tflite_models_folder,
-        args.results_folder,
-    )
-    for folder in folders:
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-
-def flush_folders(args) -> None:
-    if args.clean:
-        folders = (
-            args.models_folder,
-            args.tflite_models_folder,
-            args.results_folder,
-        )
-        for folder in folders:
-            shutil.rmtree(folder)
-
-
-def set_random_state(seed: int) -> None:
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    os.environ['TF_DETERMINISTIC_OPS'] = '1'
-    random.seed(seed)
-    tf.random.set_seed(seed)
-    np.random.seed(seed)
+import utils
 
 
 def main(args):
@@ -91,6 +59,7 @@ def main(args):
         validation_data=dataset.val_ds,
         callbacks=callbacks
         )
+    latency_value = utils.compute_latency(model=model, dataset=dataset.test_ds)
     test_loss, test_accuracy = model.evaluate(dataset.test_ds)
     training_loss = history.history['loss'][-1]
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
@@ -106,15 +75,16 @@ def main(args):
         tflite_models_folder=args.tflite_models_folder
         )
     model_info = vars(args)
-    model_info['tflite_model_size'] = model_size
-    model_info['zip_tflite_model_size'] = zip_size
+    model_info['latency_ms'] = latency_value
+    model_info['tflite_model_size_kB'] = model_size
+    model_info['zip_tflite_model_size_kB'] = zip_size
     model_info['training_loss'] = training_loss
     model_info['training_accuracy'] = training_accuracy
     model_info['val_loss'] = val_loss
     model_info['val_accuracy'] = val_accuracy
     model_info['test_loss'] = test_loss
     model_info['test_accuracy'] = test_accuracy
-    print(model_info)
+    utils.print_pretty_results(model_info)
     df = pd.DataFrame(model_info, index=[0])
     output_path = os.path.join(
         args.results_folder,
@@ -135,6 +105,7 @@ if __name__ == '__main__':
     parameters.pruning(parser=parser)
     parameters.training(parser=parser)
     args = parser.parse_args()
-    set_random_state(args.seed)
-    flush_folders(args)
+    utils.set_random_state(args.seed)
+    utils.flush_folders(args)
+    utils.create_folders(args)
     main(args)
