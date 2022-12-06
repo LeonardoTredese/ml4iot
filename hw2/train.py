@@ -1,45 +1,44 @@
 import tensorflow as tf
 from model import get_model
 from dataset import Dataset
-import argparse
+from argparse import ArgumentParser
 import os
 import random
 import numpy as np
-from time import time
+import save
+import parameters
 import pandas as pd
-from zipfile import ZipFile
 import shutil
 
-seed = 42
-os.environ['PYTHONHASHSEED'] = str(seed)
-os.environ['TF_DETERMINISTIC_OPS'] = '1'
-random.seed(seed)
-tf.random.set_seed(seed)
-np.random.seed(seed)
 
-def get_all_file_paths(directory: str) -> list:
-    file_paths = []
-    for root, _, files in os.walk(directory):
-        for filename in files:
-            filepath = os.path.join(root, filename)
-            file_paths.append(filepath)
-    return file_paths
+def create_folders(args) -> None:
+    folders = (
+        args.models_folder,
+        args.tflite_models_folder,
+        args.results_folder,
+    )
+    for folder in folders:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
 
-def compute_size(
-        models_folder: str,
-        model_name: int
-        ) -> tuple[int, int]:
-    model_path = os.path.join(models_folder, model_name)
-    model_size = 0
-    model_files = get_all_file_paths(model_path)
-    zip_path = f'{model_path}.zip'
-    with ZipFile(zip_path, 'w') as f:
-        for file_path in model_files:
-            f.write(file_path)
-            model_size += os.path.getsize(file_path)
-    zip_size = os.path.getsize(zip_path)
-    return model_size, zip_size
+def flush_folders(args) -> None:
+    if args.clean:
+        folders = (
+            args.models_folder,
+            args.tflite_models_folder,
+            args.results_folder,
+        )
+        for folder in folders:
+            shutil.rmtree(folder)
+
+
+def set_random_state(seed: int) -> None:
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    random.seed(seed)
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
 
 
 def main(args):
@@ -97,23 +96,25 @@ def main(args):
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
     val_loss = history.history['val_loss'][-1]
     val_accuracy = history.history['val_sparse_categorical_accuracy'][-1]
-    timestamp = int(time())
-    model_name = str(timestamp)
-    model_path = os.path.join(args.models_folder, model_name)
-    model.save(model_path)
-    model_size, zip_size = compute_size(
+    model_name = save.save(
+        model=model,
+        models_folder=args.models_folder
+        )
+    model_size, zip_size = save.convert_to_lite(
         models_folder=args.models_folder,
-        model_name=str(timestamp)
+        model_name=model_name,
+        tflite_models_folder=args.tflite_models_folder
         )
     model_info = vars(args)
-    model_info['model_size'] = model_size
-    model_info['zip_size'] = zip_size
+    model_info['tflite_model_size'] = model_size
+    model_info['zip_tflite_model_size'] = zip_size
     model_info['training_loss'] = training_loss
     model_info['training_accuracy'] = training_accuracy
     model_info['val_loss'] = val_loss
     model_info['val_accuracy'] = val_accuracy
     model_info['test_loss'] = test_loss
     model_info['test_accuracy'] = test_accuracy
+    print(model_info)
     df = pd.DataFrame(model_info, index=[0])
     output_path = os.path.join(
         args.results_folder,
@@ -125,112 +126,15 @@ def main(args):
         header=not os.path.exists(output_path),
         index=False
         )
-    shutil.rmtree(args.models_folder)
+    
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--dataset',
-        type=str,
-        default='../msc-data',
-        help='folder path for msc dataset'
-    )
-    parser.add_argument(
-        '--preprocess',
-        type=str,
-        default='mfccs',
-        help='Type of preprocess, str in ["spect", "log_mel_spect", "mfccs"]'
-    )
-    parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=20,
-        help='The size for the batches.'
-    )
-    parser.add_argument(
-        '--initial_learning_rate',
-        type=float,
-        default=0.01,
-        help='The initial learning rate value.'
-    )
-    parser.add_argument(
-        '--end_learning_rate',
-        type=float,
-        default=1e-5,
-        help='The final learning rate value.'
-    )
-    parser.add_argument(
-        '--epochs',
-        type=int,
-        default=20,
-        help='The number of epochs.'
-    )
-    parser.add_argument(
-        '--frame_length_in_s',
-        type=float,
-        default=0.04,
-        help='The frame length for STFT.'
-    )
-    parser.add_argument(
-        '--frame_step_in_s',
-        type=float,
-        default=0.02,
-        help='The step size for STFT.'
-    )
-    parser.add_argument(
-        '--num_mel_bins',
-        type=int,
-        default=40,
-        help='The number of bins for the mel spectrogram.'
-    )
-    parser.add_argument(
-        '--lower_frequency',
-        type=int,
-        default=20,
-        help='The lower frequency for the mel spectrogram.'
-    )
-    parser.add_argument(
-        '--upper_frequency',
-        type=int,
-        default=4000,
-        help='The upper frequency for the mel spectrogram.'
-    )
-    parser.add_argument(
-        '--num_coefficients',
-        type=int,
-        default=40,
-        help='The number of coefficients in mfccs.'
-    )
-    parser.add_argument(
-        '--models_folder',
-        type=str,
-        default='models',
-        help='Folder for saving the models and results.'
-    )
-    parser.add_argument(
-        '--results_folder',
-        type=str,
-        default='results',
-        help='Folder for saving csv results.'
-    )
-    parser.add_argument(
-        '--initial_sparsity',
-        type=float,
-        default=0.2,
-        help='Parameter for weights pruning.'
-    )
-    parser.add_argument(
-        '--final_sparsity',
-        type=float,
-        default=0.7,
-        help='Parameter for weights pruning.'
-    )
-    parser.add_argument(
-        '--prune',
-        action='store_true',
-        help='Use this flag to perform weights pruning'
-    )
+    parser = ArgumentParser()
+    parameters.IO(parser=parser)
+    parameters.preprocess(parser=parser)
+    parameters.pruning(parser=parser)
+    parameters.training(parser=parser)
     args = parser.parse_args()
-    args.models_folder = os.path.join(args.dataset, args.models_folder)
-    args.results_folder = os.path.join(args.dataset, args.results_folder)
+    set_random_state(args.seed)
+    flush_folders(args)
     main(args)
