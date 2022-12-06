@@ -3,6 +3,8 @@ hw1/ex2/settings.txt
 *.tflite
 *.zip
 *.wav
+hw2/model/models/*
+hw2/model/results/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
