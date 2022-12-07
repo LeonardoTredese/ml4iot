@@ -61,11 +61,13 @@ def compute_latency(model, dataset) -> float:
         dtype=float
         )
     i = 0
+    print('Starting latency evaluation...')
     for sample, _ in dataset:
         start = time()
-        model.predict(sample)
+        model.predict(sample, verbose=0)
         values[i] = time() - start
         i += 1
+    print('Done')
     return np.median(values)*1e3
 
 

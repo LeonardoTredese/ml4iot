@@ -46,6 +46,7 @@ class Dataset:
         self.DOWNSAMPLING_RATE = 16000
         self.LABELS = ('go', 'stop',)
         self.batch_size = batch_size
+        self.batch_sample_shape = None
         self.sample_shape = None
         self.frame_length_in_s = frame_length_in_s
         self.frame_step_in_s = frame_step_in_s
@@ -61,21 +62,28 @@ class Dataset:
             self.preprocess = self.get_mfccs
         else:
             raise Exception(f'{preprocess} preprocess is not supported.')
-        self.train_ds = self.train_files_ds \
-                        .map(self.preprocess) \
-                        .batch(self.batch_size)
-        self.test_ds = self.test_files_ds \
-                       .map(self.preprocess) \
-                       .batch(self.batch_size)
-        self.val_ds = self.val_files_ds \
-                      .map(self.preprocess) \
-                      .batch(self.batch_size)
+        self.train = self.train_files_ds.map(self.preprocess)
+        self.test = self.test_files_ds.map(self.preprocess)
+        self.val = self.val_files_ds.map(self.preprocess)
+        self.train_batch = self.train.batch(self.batch_size)
+        self.test_batch = self.test.batch(self.batch_size)
+        self.val_batch = self.val.batch(self.batch_size)
+        self.train = self.train.batch(1)
+        self.test = self.test.batch(1)
+        self.val = self.val.batch(1)
+
+    def get_sample_batch_shape(self):
+        if self.batch_sample_shape is None:
+            for batch, _ in self.train_batch.take(1):
+                pass
+            self.batch_sample_shape = batch.shape + (1,)
+        return self.batch_sample_shape
 
     def get_sample_shape(self):
         if self.sample_shape is None:
-            for example_batch, _ in self.train_ds.take(1):
+            for sample, _ in self.train.take(1):
                 pass
-            self.sample_shape = example_batch.shape + (1,)
+            self.sample_shape = sample.shape + (1,)
         return self.sample_shape
 
     def get_audio_and_label(self, filename):

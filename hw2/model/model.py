@@ -18,7 +18,7 @@ def get_model(
         )
     model = tf.keras.Sequential([
             tf.keras.layers.Input(
-                shape=dataset.get_sample_shape()[1:]
+                shape=dataset.get_sample_batch_shape()[1:]
                 ),
             tf.keras.layers.Conv2D(
                 filters=256,

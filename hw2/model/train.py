@@ -41,26 +41,26 @@ def main(args):
         prune=args.prune,
         initial_sparsity=args.initial_sparsity,
         final_sparsity=args.final_sparsity,
-        begin_step=int(len(dataset.train_ds)*args.epochs*0.2),
-        end_step=int(len(dataset.train_ds)*args.epochs)
+        begin_step=int(len(dataset.train_batch)*args.epochs*0.2),
+        end_step=int(len(dataset.train_batch)*args.epochs)
         )
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=False)
     linear_decay = tf.keras.optimizers.schedules.PolynomialDecay(
         initial_learning_rate=args.initial_learning_rate,
         end_learning_rate=args.end_learning_rate,
-        decay_steps=len(dataset.train_ds) * args.epochs,
+        decay_steps=len(dataset.train_batch) * args.epochs,
     )
     optimizer = tf.optimizers.Adam(learning_rate=linear_decay)
     metrics = [tf.metrics.SparseCategoricalAccuracy()]
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
     history = model.fit(
-        dataset.train_ds,
+        dataset.train_batch,
         epochs=args.epochs,
-        validation_data=dataset.val_ds,
+        validation_data=dataset.val_batch,
         callbacks=callbacks
         )
-    latency_value = utils.compute_latency(model=model, dataset=dataset.test_ds)
-    test_loss, test_accuracy = model.evaluate(dataset.test_ds)
+    latency_value = utils.compute_latency(model=model, dataset=dataset.test)
+    test_loss, test_accuracy = model.evaluate(dataset.test_batch)
     training_loss = history.history['loss'][-1]
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
     val_loss = history.history['val_loss'][-1]
