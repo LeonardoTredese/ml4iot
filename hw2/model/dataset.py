@@ -79,13 +79,6 @@ class Dataset:
             self.batch_sample_shape = batch.shape + (1,)
         return self.batch_sample_shape
 
-    def get_sample_shape(self):
-        if self.sample_shape is None:
-            for sample, _ in self.train.take(1):
-                pass
-            self.sample_shape = sample.shape + (1,)
-        return self.sample_shape
-
     def get_audio_and_label(self, filename):
         audio_binary = tf.io.read_file(filename)
         audio, sampling_rate = tf.audio.decode_wav(audio_binary) 

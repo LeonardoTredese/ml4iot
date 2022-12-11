@@ -9,7 +9,8 @@ def get_model(
         initial_sparsity,
         final_sparsity,
         begin_step,
-        end_step):
+        end_step,
+        ):
     pruning_schedule = tfmot.sparsity.keras.PolynomialDecay(
         initial_sparsity=initial_sparsity,
         final_sparsity=final_sparsity,
@@ -20,13 +21,18 @@ def get_model(
             tf.keras.layers.Input(
                 shape=dataset.get_sample_batch_shape()[1:]
                 ),
-            tf.keras.layers.Conv2D(
-                filters=256,
+            tf.keras.layers.DepthwiseConv2D(
                 kernel_size=[3, 3],
                 strides=[2, 2],
                 use_bias=False,
                 padding='valid'
                 ),
+            tf.keras.layers.Conv2D(
+                filters=256,
+                kernel_size=[1, 1],
+                strides=[1, 1],   
+                use_bias=False
+            ),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
             tf.keras.layers.DepthwiseConv2D(
@@ -65,7 +71,7 @@ def get_model(
             ])
     model_for_pruning = tfmot.sparsity.keras.prune_low_magnitude(
         to_prune=model,
-        pruning_schedule=pruning_schedule
+        pruning_schedule=pruning_schedule,
     )
     callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
     return (model_for_pruning, callbacks) if prune else (model, [])
