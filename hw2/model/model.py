@@ -10,6 +10,7 @@ def get_model(
         final_sparsity,
         begin_step,
         end_step,
+        alpha
         ):
     pruning_schedule = tfmot.sparsity.keras.PolynomialDecay(
         initial_sparsity=initial_sparsity,
@@ -28,7 +29,7 @@ def get_model(
                 padding='valid'
                 ),
             tf.keras.layers.Conv2D(
-                filters=256,
+                filters=int(128*alpha),
                 kernel_size=[1, 1],
                 strides=[1, 1],   
                 use_bias=False
@@ -42,7 +43,7 @@ def get_model(
                 padding='same'
                 ),
             tf.keras.layers.Conv2D(
-                filters=256,
+                filters=int(128*alpha),
                 kernel_size=[1, 1],
                 strides=[1, 1],   
                 use_bias=False
@@ -56,7 +57,7 @@ def get_model(
                 padding='same'
                 ),
             tf.keras.layers.Conv2D(
-                filters=256,
+                filters=int(128*alpha),
                 kernel_size=[1, 1],
                 strides=[1, 1],
                 use_bias=False

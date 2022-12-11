@@ -43,6 +43,7 @@ def main(args):
         final_sparsity=args.final_sparsity,
         begin_step=int(len(dataset.train_batch)*args.epochs*0.2),
         end_step=int(len(dataset.train_batch)*args.epochs),
+        alpha=args.width_scaling
         )
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=False)
     linear_decay = tf.keras.optimizers.schedules.PolynomialDecay(
