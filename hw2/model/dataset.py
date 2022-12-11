@@ -68,9 +68,6 @@ class Dataset:
         self.train_batch = self.train.batch(self.batch_size)
         self.test_batch = self.test.batch(self.batch_size)
         self.val_batch = self.val.batch(self.batch_size)
-        self.train = self.train.batch(1)
-        self.test = self.test.batch(1)
-        self.val = self.val.batch(1)
 
     def get_sample_batch_shape(self):
         if self.batch_sample_shape is None:

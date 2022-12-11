@@ -60,7 +60,8 @@ def main(args):
         validation_data=dataset.val_batch,
         callbacks=callbacks
         )
-    latency_value = utils.compute_latency(model=model, dataset=dataset.test)
+    latency_preprocess, latency_inference, latency_total \
+         = utils.compute_latency(model=model, dataset=dataset)
     test_loss, test_accuracy = model.evaluate(dataset.test_batch)
     training_loss = history.history['loss'][-1]
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
@@ -76,7 +77,9 @@ def main(args):
         tflite_models_folder=args.tflite_models_folder
         )
     model_info = vars(args)
-    model_info['latency_ms'] = latency_value
+    model_info['latency'] = latency_total
+    model_info['latency_preprocess'] = latency_preprocess
+    model_info['latency_inference'] = latency_inference
     model_info['tflite_model_size_kB'] = model_size
     model_info['zip_tflite_model_size_kB'] = zip_size
     model_info['training_loss'] = training_loss

@@ -1,0 +1,12 @@
+python train.py \
+--dataset /home/mveronesi/ml4iot/msc-data \
+--models_folder /home/mveronesi/ml4iot/hw2/model/models \
+--tflite_models_folder /home/mveronesi/ml4iot/hw2/model/tflite \
+--results_folder /home/mveronesi/ml4iot/hw2/model/results \
+--epochs 1 \
+--frame_length_in_s 0.032 \
+--frame_step_in_s 0.016 \
+--num_mel_bins 10 \
+--prune \
+--final_sparsity 0.9 \
+--width_scaling 0.5
