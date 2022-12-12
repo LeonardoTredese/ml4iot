@@ -55,16 +55,28 @@ class Dataset:
         self.upper_frequency = upper_frequency
         self.num_coefficients = num_coefficients
         if preprocess == 'spect':
-            self.preprocess = self.get_spectrogram
+            self.preprocess = lambda audio, label: \
+                self.get_spectrogram(audio, label)
         elif preprocess == 'log_mel_spect':
-            self.preprocess = self.get_log_mel_spectrogram
+            self.preprocess = lambda audio, label: \
+                self.get_log_mel_spectrogram(
+                    *self.get_spectrogram(audio, label)
+                    )
         elif preprocess == 'mfccs':
-            self.preprocess = self.get_mfccs
+            self.preprocess = lambda audio, label: \
+                self.get_mfccs(
+                    *self.get_log_mel_spectrogram(
+                        *self.get_spectrogram(audio, label)
+                        )
+                    )
         else:
             raise Exception(f'{preprocess} preprocess is not supported.')
-        self.train = self.train_files_ds.map(self.preprocess)
-        self.test = self.test_files_ds.map(self.preprocess)
-        self.val = self.val_files_ds.map(self.preprocess)
+        self.train_wav_ds = self.train_files_ds.map(self.get_audio_and_label)
+        self.test_wav_ds = self.test_files_ds.map(self.get_audio_and_label)
+        self.val_wav_ds = self.val_files_ds.map(self.get_audio_and_label)
+        self.train = self.train_wav_ds.map(self.preprocess)
+        self.test = self.test_wav_ds.map(self.preprocess)
+        self.val = self.val_wav_ds.map(self.preprocess)
         self.train_batch = self.train.batch(self.batch_size)
         self.test_batch = self.test.batch(self.batch_size)
         self.val_batch = self.val.batch(self.batch_size)
@@ -94,10 +106,9 @@ class Dataset:
             )
         audio_padded.set_shape(self.DOWNSAMPLING_RATE)
         label_id = tf.argmax(label==self.LABELS)
-        return audio_padded, sampling_rate, label_id
+        return audio_padded, label_id
 
-    def get_spectrogram(self, filename):
-        audio, _, label = self.get_audio_and_label(filename)
+    def get_spectrogram(self, audio, label):
         frame_length = int(self.frame_length_in_s * self.DOWNSAMPLING_RATE)
         frame_step = int(self.frame_step_in_s * self.DOWNSAMPLING_RATE)        
         stft = tf.signal.stft(
@@ -109,8 +120,7 @@ class Dataset:
         spectrogram = tf.abs(stft)
         return spectrogram, label
 
-    def get_log_mel_spectrogram(self, filename):
-        spectrogram, label = self.get_spectrogram(filename)
+    def get_log_mel_spectrogram(self, spectrogram, label):
         linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
             num_mel_bins = self.num_mel_bins,
             num_spectrogram_bins = spectrogram.shape[1],
@@ -122,7 +132,6 @@ class Dataset:
         log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
         return log_mel_spectrogram, label
 
-    def get_mfccs(self, filename):
-        log_mel_spectrogram, label = self.get_log_mel_spectrogram(filename)
+    def get_mfccs(self, log_mel_spectrogram, label):
         mfccs = tf.signal.mfccs_from_log_mel_spectrograms(log_mel_spectrogram)
         return mfccs[:, :self.num_coefficients], label

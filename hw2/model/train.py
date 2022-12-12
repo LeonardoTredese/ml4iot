@@ -60,8 +60,6 @@ def main(args):
         validation_data=dataset.val_batch,
         callbacks=callbacks
         )
-    latency_preprocess, latency_inference, latency_total \
-         = utils.compute_latency(model=model, dataset=dataset)
     test_loss, test_accuracy = model.evaluate(dataset.test_batch)
     training_loss = history.history['loss'][-1]
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
@@ -71,11 +69,16 @@ def main(args):
         model=model,
         models_folder=args.models_folder
         )
-    model_size, zip_size = save.convert_to_lite(
+    model_size, zip_size, tflite_model_path = save.convert_to_lite(
         models_folder=args.models_folder,
         model_name=model_name,
         tflite_models_folder=args.tflite_models_folder
         )
+    latency_preprocess, latency_inference, latency_total \
+         = utils.compute_latency(
+            tflite_model_path=tflite_model_path,
+            dataset=dataset
+            )
     model_info = vars(args)
     model_info['latency'] = latency_total
     model_info['latency_preprocess'] = latency_preprocess
