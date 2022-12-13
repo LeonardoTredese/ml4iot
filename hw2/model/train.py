@@ -80,6 +80,7 @@ def main(args):
             dataset=dataset
             )
     model_info = vars(args)
+    model_info['model_name'] = model_name
     model_info['latency'] = latency_total
     model_info['latency_preprocess'] = latency_preprocess
     model_info['latency_inference'] = latency_inference
@@ -95,7 +96,7 @@ def main(args):
     df = pd.DataFrame(model_info, index=[0])
     output_path = os.path.join(
         args.results_folder,
-        f'{model_name}.csv'
+        'results.csv'
         )
     df.to_csv(
         output_path,
