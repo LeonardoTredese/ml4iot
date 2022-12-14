@@ -2,7 +2,6 @@ import tensorflow as tf
 
 
 class Model:
-
     def __init__(self, model_path: str):
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
