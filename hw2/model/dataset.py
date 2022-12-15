@@ -48,12 +48,25 @@ class Dataset:
         self.batch_size = batch_size
         self.batch_sample_shape = None
         self.sample_shape = None
+        self.spectrogram_sample_shape = None
         self.frame_length_in_s = frame_length_in_s
         self.frame_step_in_s = frame_step_in_s
         self.num_mel_bins = num_mel_bins
         self.lower_frequency = lower_frequency
         self.upper_frequency = upper_frequency
         self.num_coefficients = num_coefficients
+    
+        if preprocess in ['log_mel_spect', 'mfccs']:
+            fft_length = int(self.frame_length_in_s * self.DOWNSAMPLING_RATE)
+            self.linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
+                num_mel_bins = self.num_mel_bins,
+                num_spectrogram_bins = fft_length // 2 + 1,
+                sample_rate = self.DOWNSAMPLING_RATE,
+                lower_edge_hertz = self.lower_frequency,
+                upper_edge_hertz = self.upper_frequency)
+        else:
+            self.linear_to_mel_weight_matrix = None
+        
         if preprocess == 'spect':
             self.preprocess = lambda audio, label: \
                 self.get_spectrogram(audio, label)
@@ -80,6 +93,7 @@ class Dataset:
         self.train_batch = self.train.batch(self.batch_size)
         self.test_batch = self.test.batch(self.batch_size)
         self.val_batch = self.val.batch(self.batch_size)
+        
 
     def get_sample_batch_shape(self):
         if self.batch_sample_shape is None:
@@ -121,14 +135,7 @@ class Dataset:
         return spectrogram, label
 
     def get_log_mel_spectrogram(self, spectrogram, label):
-        linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
-            num_mel_bins = self.num_mel_bins,
-            num_spectrogram_bins = spectrogram.shape[1],
-            sample_rate = self.DOWNSAMPLING_RATE,
-            lower_edge_hertz = self.lower_frequency,
-            upper_edge_hertz = self.upper_frequency
-        )
-        mel_spectrogram = spectrogram @ linear_to_mel_weight_matrix
+        mel_spectrogram = spectrogram @ self.linear_to_mel_weight_matrix
         log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
         return log_mel_spectrogram, label
 
