@@ -53,10 +53,10 @@ class BatteryMonitor:
         else:
             print("Cannot connect to redis instance")
 
-    def start(self) -> bool:
+    def start(self) -> None:
         self._monitoring = True
 
-    def stop(self) -> bool:
+    def stop(self) -> None:
         self._monitoring = False
 
     def log_battery(self) -> None:
@@ -66,8 +66,6 @@ class BatteryMonitor:
                 self._redis.ts().add(key=self._series, timestamp=int(time()*1000), value=percentage)
             except redis.ResponseError:    
                 print("Could not log")
-        else: 
-            print("Cannot connect to redis instance")
 
 # Utils
 def get_audio_from_numpy(indata):
@@ -86,7 +84,7 @@ def get_mfccs(log_mel_spectrogram):
     return mfccs[:, :VUI_NUM_COEFFICIENTS]
 
 def preprocess(indata):
-    data = get_spectrogram(SR, VUI_FRAME_LEN, VUI_FRAME_STEP)
+    data = get_spectrogram(indata, SR, VUI_FRAME_LEN, VUI_FRAME_STEP)
     data = get_log_mel_spectrogram(data)
     return get_mfccs(data)
     
@@ -128,6 +126,8 @@ class Model:
         self.input_shape = self.input_details[0]['shape']
 
     def predict(self, sample):
+        sample = tf.expand_dims(sample, -1)
+        sample = tf.expand_dims(sample, 0)
         self.interpreter.set_tensor(self.input_details[0]['index'], sample)
         self.interpreter.invoke()
         return self.interpreter.get_tensor(self.output_details[0]['index'])
@@ -135,12 +135,15 @@ class Model:
 ### Core ###
 def VAD_VUI(indata, frames, callback_time, status, model = None, monitor= None):
     if not is_silence(indata, SR, VAD_FRAME_LEN, VAD_DB_THRESH, VAD_DURATION):
+        print("detected sound")
         x = preprocess(indata)
-        y = model.predict(x)
+        y = model.predict(x)[0]
         if y[0] > .95:
-            montior.stop()
+            print("detected go")
+            monitor.start()
         elif y[1] > .95:
-            montior.start()
+            print("detected stop")
+            monitor.stop()
     monitor.log_battery()
 
 args = parser.parse_args()
