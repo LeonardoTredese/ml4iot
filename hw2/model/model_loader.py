@@ -11,6 +11,8 @@ class TFLite_Model:
         self.input_shape = self.input_details[0]['shape']
 
     def predict(self, sample):
+        sample = tf.expand_dims(sample, -1)
+        sample = tf.expand_dims(sample, 0)
         self.interpreter.set_tensor(self.input_details[0]['index'], sample)
         self.interpreter.invoke()
         return self.interpreter.get_tensor(self.output_details[0]['index'])
