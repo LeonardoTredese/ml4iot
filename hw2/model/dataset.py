@@ -90,9 +90,9 @@ class Dataset:
         self.train = self.train_wav_ds.map(self.preprocess)
         self.test = self.test_wav_ds.map(self.preprocess)
         self.val = self.val_wav_ds.map(self.preprocess)
-        self.train_batch = self.train.batch(self.batch_size)
-        self.test_batch = self.test.batch(self.batch_size)
-        self.val_batch = self.val.batch(self.batch_size)
+        self.train_batch = self.train.shuffle(100).batch(self.batch_size)
+        self.test_batch = self.test.shuffle(100).batch(self.batch_size)
+        self.val_batch = self.val.shuffle(100).batch(self.batch_size)
         
 
     def get_sample_batch_shape(self):
