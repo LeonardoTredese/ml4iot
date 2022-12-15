@@ -2,7 +2,6 @@ import os
 import uuid
 import redis
 import sounddevice as sd
-import scipy.io.wavfile as wf
 import zipfile as zf
 import tensorflow as tf
 import psutil as psu
