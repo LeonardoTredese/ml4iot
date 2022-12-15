@@ -51,7 +51,7 @@ def convert_to_lite(
             compression=zipfile.ZIP_DEFLATED) as f:
         f.write(
             filename=tflite_model_path,
-            arcname=f'{model_name}.tflite'
+            arcname=tflite_model_name
             )
     tflite_model_size = os.path.getsize(tflite_model_path) / 1024.0
     zip_tflite_model_size = os.path.getsize(zip_tflite_model_path) / 1024.0
