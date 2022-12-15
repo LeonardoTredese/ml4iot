@@ -141,3 +141,9 @@ def training(parser: ArgumentParser) -> None:
         default=20,
         help='The number of epochs.'
     )
+    parser.add_argument(
+        '--width_scaling',
+        type=float,
+        default=0.25,
+        help='Alpha parameter for width scaling.'
+    )

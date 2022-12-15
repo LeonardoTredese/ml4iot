@@ -18,7 +18,14 @@ VUI_FRAME_STEP = 0
 VUI_NUM_MEL_BINS = 0
 VUI_LOWER_FREQUENCY = 0
 VUI_UPPER_FREQUENCY = 0
-VUI_NUM_COEFFICIENTS = 0 
+VUI_NUM_COEFFICIENTS = 0
+LINEAR_TO_MEL_WEIGHT_MATRIX = tf.signal.linear_to_mel_weight_matrix(
+    num_mel_bins = VUI_NUM_MEL_BINS,
+    num_spectrogram_bins = VUI_FRAME_LEN // 2 + 1,
+    sample_rate = SR,
+    lower_edge_hertz = VUI_LOWER_FREQUENCY,
+    upper_edge_hertz = VUI_UPPER_FREQUENCY
+)
 
 # Script Arguments
 parser = argparse.ArgumentParser()
@@ -67,14 +74,7 @@ def get_audio_from_numpy(indata):
  return indata
 
 def get_log_mel_spectrogram(spectrogram):
-    linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
-        num_mel_bins = VUI_NUM_MEL_BINS,
-        num_spectrogram_bins = spectrogram.shape[1],
-        sample_rate = SR,
-        lower_edge_hertz = VUI_LOWER_FREQUENCY,
-        upper_edge_hertz = VUI_UPPER_FREQUENCY
-    )
-    mel_spectrogram = spectrogram @ linear_to_mel_weight_matrix
+    mel_spectrogram = spectrogram @ LINEAR_TO_MEL_WEIGHT_MATRIX
     log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
     return log_mel_spectrogram
 
@@ -141,9 +141,14 @@ def VAD_VUI(indata, frames, callback_time, status, model = None, monitor= None):
     monitor.log_battery()
 
 args = parser.parse_args()
+
 if not os.path.exists(MODEL_PATH) and os.path.exists(MODEL_PATH + '.zip'):
     with zf.ZipFile(MODEL_PATH + '.zip', 'r') as zipper:
         zipper.extractall('.')
+
+if not os.path.exists(MODEL_PATH):
+    print(f"Could not find either {MODEL_PATH} or {MODEL_PATH + '.zip'}, Exiting")
+    exit(1)
 
 monitor = BatteryMonitor(args.host, args.port, args.user, args.password)
 model = Model(MODEL_PATH)
@@ -153,5 +158,3 @@ with sd.InputStream(callback=callback, device=args.device, dtype='int16', sample
     while command := input("commands: q = stop: "):
         if command in ['q', 'Q']:
             break
-
-            

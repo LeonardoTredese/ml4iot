@@ -41,26 +41,26 @@ def main(args):
         prune=args.prune,
         initial_sparsity=args.initial_sparsity,
         final_sparsity=args.final_sparsity,
-        begin_step=int(len(dataset.train_ds)*args.epochs*0.2),
-        end_step=int(len(dataset.train_ds)*args.epochs)
+        begin_step=int(len(dataset.train_batch)*args.epochs*0.2),
+        end_step=int(len(dataset.train_batch)*args.epochs),
+        alpha=args.width_scaling
         )
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=False)
     linear_decay = tf.keras.optimizers.schedules.PolynomialDecay(
         initial_learning_rate=args.initial_learning_rate,
         end_learning_rate=args.end_learning_rate,
-        decay_steps=len(dataset.train_ds) * args.epochs,
+        decay_steps=len(dataset.train_batch) * args.epochs,
     )
     optimizer = tf.optimizers.Adam(learning_rate=linear_decay)
     metrics = [tf.metrics.SparseCategoricalAccuracy()]
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
     history = model.fit(
-        dataset.train_ds,
+        dataset.train_batch,
         epochs=args.epochs,
-        validation_data=dataset.val_ds,
+        validation_data=dataset.val_batch,
         callbacks=callbacks
         )
-    latency_value = utils.compute_latency(model=model, dataset=dataset.test_ds)
-    test_loss, test_accuracy = model.evaluate(dataset.test_ds)
+    test_loss, test_accuracy = model.evaluate(dataset.test_batch)
     training_loss = history.history['loss'][-1]
     training_accuracy = history.history['sparse_categorical_accuracy'][-1]
     val_loss = history.history['val_loss'][-1]
@@ -69,13 +69,21 @@ def main(args):
         model=model,
         models_folder=args.models_folder
         )
-    model_size, zip_size = save.convert_to_lite(
+    model_size, zip_size, tflite_model_path = save.convert_to_lite(
         models_folder=args.models_folder,
         model_name=model_name,
         tflite_models_folder=args.tflite_models_folder
         )
+    latency_preprocess, latency_inference, latency_total \
+         = utils.compute_latency(
+            tflite_model_path=tflite_model_path,
+            dataset=dataset
+            )
     model_info = vars(args)
-    model_info['latency_ms'] = latency_value
+    model_info['model_name'] = model_name
+    model_info['latency'] = latency_total
+    model_info['latency_preprocess'] = latency_preprocess
+    model_info['latency_inference'] = latency_inference
     model_info['tflite_model_size_kB'] = model_size
     model_info['zip_tflite_model_size_kB'] = zip_size
     model_info['training_loss'] = training_loss
@@ -88,7 +96,7 @@ def main(args):
     df = pd.DataFrame(model_info, index=[0])
     output_path = os.path.join(
         args.results_folder,
-        f'{model_name}.csv'
+        'results.csv'
         )
     df.to_csv(
         output_path,
