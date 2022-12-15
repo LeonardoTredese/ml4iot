@@ -147,3 +147,8 @@ def training(parser: ArgumentParser) -> None:
         default=0.25,
         help='Alpha parameter for width scaling.'
     )
+    parser.add_argument(
+        '--depthwise',
+        action='store_true',
+        help='Use this flag to activate depthwise separable convolution.'
+    )

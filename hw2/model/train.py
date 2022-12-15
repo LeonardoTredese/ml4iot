@@ -39,6 +39,7 @@ def main(args):
     model, callbacks = get_model(
         dataset=dataset,
         prune=args.prune,
+        depthwise=args.depthwise,
         initial_sparsity=args.initial_sparsity,
         final_sparsity=args.final_sparsity,
         begin_step=int(len(dataset.train_batch)*args.epochs*0.2),
