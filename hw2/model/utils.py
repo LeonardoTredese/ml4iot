@@ -74,8 +74,6 @@ def compute_latency(tflite_model_path, dataset: Dataset) -> float:
         start_preprocess = time()
         sample, _ = dataset.preprocess(audio, label)
         end_preprocess = time()
-        sample = tf.expand_dims(sample, -1)
-        sample = tf.expand_dims(sample, 0)
         model.predict(sample)
         latency_inference[i] = time() - end_preprocess
         latency_preprocess[i] = end_preprocess - start_preprocess
