@@ -1,5 +1,5 @@
 python train.py \
---dataset /home/mveronesi/ml4iot/msc-data \
+--dataset /media/mveronesi/0723563C3F2F4BA8 \
 --models_folder /home/mveronesi/ml4iot/hw2/model/models \
 --tflite_models_folder /home/mveronesi/ml4iot/hw2/model/tflite \
 --results_folder /home/mveronesi/ml4iot/hw2/model/results \
@@ -9,4 +9,5 @@ python train.py \
 --lower_frequency 250 \
 --upper_frequency 2000 \
 --num_coefficients 11 \
---epochs 1
+--epochs 1 \
+--clean
