@@ -1,11 +1,14 @@
 import os
+import uuid
 import redis
+import sounddevice as sd
 import scipy.io.wavfile as wf
 import zipfile as zf
 import tensorflow as tf
 import psutil as psu
 from functools import partial
 from time import time
+from argparse import ArgumentParser
 
 # Constants
 SR = 16_000
@@ -13,22 +16,22 @@ VAD_FRAME_LEN = 16e-3
 VAD_DB_THRESH = -120
 VAD_DURATION = 17e-3
 MODEL_PATH = "model6.tflite"
-VUI_FRAME_LEN = 0 
-VUI_FRAME_STEP = 0
-VUI_NUM_MEL_BINS = 0
-VUI_LOWER_FREQUENCY = 0
-VUI_UPPER_FREQUENCY = 0
-VUI_NUM_COEFFICIENTS = 0
+VUI_FRAME_LEN = 16e-3
+VUI_FRAME_STEP = 8e-3
+VUI_NUM_MEL_BINS = 16
+VUI_LOWER_FREQUENCY = 20
+VUI_UPPER_FREQUENCY = 4000
+VUI_NUM_COEFFICIENTS = 8
 LINEAR_TO_MEL_WEIGHT_MATRIX = tf.signal.linear_to_mel_weight_matrix(
     num_mel_bins = VUI_NUM_MEL_BINS,
-    num_spectrogram_bins = VUI_FRAME_LEN // 2 + 1,
+    num_spectrogram_bins = int(VUI_FRAME_LEN * SR) // 2 + 1,
     sample_rate = SR,
     lower_edge_hertz = VUI_LOWER_FREQUENCY,
     upper_edge_hertz = VUI_UPPER_FREQUENCY
 )
 
 # Script Arguments
-parser = argparse.ArgumentParser()
+parser = ArgumentParser()
 parser.add_argument('--device', type=int, required=True)
 parser.add_argument('--host', type=str, required=True)
 parser.add_argument('--port', type=int, required=True)
@@ -144,7 +147,8 @@ args = parser.parse_args()
 
 if not os.path.exists(MODEL_PATH) and os.path.exists(MODEL_PATH + '.zip'):
     with zf.ZipFile(MODEL_PATH + '.zip', 'r') as zipper:
-        zipper.extractall('.')
+        print(zipper.infolist())
+        zipper.extractall(path=os.getcwd())
 
 if not os.path.exists(MODEL_PATH):
     print(f"Could not find either {MODEL_PATH} or {MODEL_PATH + '.zip'}, Exiting")
