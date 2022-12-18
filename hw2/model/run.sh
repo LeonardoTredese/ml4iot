@@ -1,5 +1,5 @@
 python train.py \
---dataset /media/mveronesi/0723563C3F2F4BA8 \
+--dataset ~/msc-data \
 --models_folder /home/mveronesi/ml4iot/hw2/model/models \
 --tflite_models_folder /home/mveronesi/ml4iot/hw2/model/tflite \
 --results_folder /home/mveronesi/ml4iot/hw2/model/results \
