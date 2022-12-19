@@ -40,13 +40,15 @@ parser.add_argument('--password', type=str, required=True)
 # Redis battery monitor
 class BatteryMonitor:
     def __init__(self, host: str, port: int, user: str, password: str) -> None:
-        self._series = f'{hex(uuid.getnode())}:battery'
+        self._percent_series = f'{hex(uuid.getnode())}:battery'
+        self._power_series = f'{hex(uuid.getnode())}:power'
         self._monitoring = False
         self._redis = redis.Redis(host=host, username=user, port=port, password=password)
         # create redis TS
         if self._redis.ping(): 
             try:
-                self._redis.ts().create(key=self._series)
+                self._redis.ts().create(key=self._percent_series)
+                self._redis.ts().create(key=self._power_series)
             except redis.ResponseError:
                 pass
         else:
@@ -60,9 +62,10 @@ class BatteryMonitor:
 
     def log_battery(self) -> None:
         if self._monitoring and self._redis.ping():
-            percentage = psu.sensors_battery().percent
+            battery = psu.sensors_battery()
             try:
-                self._redis.ts().add(key=self._series, timestamp=int(time()*1000), value=percentage)
+                self._redis.ts().add(key=self._percent_series, timestamp=int(time()*1000), value=battery.percent)
+                self._redis.ts().add(key=self._power_series, timestamp=int(time()*1000), value=int(battery.power_plugged))
             except redis.ResponseError:    
                 print("Could not log")
 
