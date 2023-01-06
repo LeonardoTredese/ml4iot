@@ -20,6 +20,7 @@ def battery_message() -> dict:
 
 while True:
     msg_dict = battery_message()
+    print(msg_dict)
     client.publish(TOPIC, json.dumps(msg_dict))
     time.sleep(1)
     
